@@ -1,11 +1,30 @@
 import {View,Text, Button, StyleSheet, TouchableOpacity} from 'react-native'
 import React, { useEffect, useState } from 'react'
-import { addDoc, collection, onSnapshot } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, onSnapshot, updateDoc } from 'firebase/firestore';
 import { FIREBASE_DB } from '../../firebaseCofig';
 import { TextInput } from 'react-native';
 import { FlatList } from 'react-native';
 import Ionicons from '@expo/vector-icons/Ionicons';
 import {Entypo} from '@expo/vector-icons';
+import { initializeApp } from "firebase/app";
+import { getAnalytics, logEvent } from "firebase/analytics";
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+    apiKey: "AIzaSyC8oxp4SeRw2hxD6VaNwjBbLngYauxAXeA",
+    authDomain: "sanboxapp-8654d.firebaseapp.com",
+    projectId: "sanboxapp-8654d",
+    storageBucket: "sanboxapp-8654d.appspot.com",
+    messagingSenderId: "521314368265",
+    appId: "1:521314368265:web:443b0f730e7c580d97b1d8",
+    measurementId: "G-C4DE0ENL5V"
+  };
+
+  // Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+
 
 export interface Todo {
     title: string;
@@ -35,25 +54,26 @@ const [todo, setTodo] = useState('');
 
     const addToDo =async () => {
         const doc = await addDoc(collection(FIREBASE_DB, 'todos'), { title:todo, done: false})
-        console.log('file: List.tsx:12 ~ addTodo ~ doc:', doc)
         setTodo('')
     }   
 
 
-    const renderTodo = ({item}:any) =>{
+    const renderTodo = ({ item }:any) =>{
+        const ref  = doc(FIREBASE_DB,`todos/${item.id}`)
+        
         const toggleDone = async() => {
-
+            updateDoc(ref,{done: !item.done})
         }
 
         const deleteItem = async() => {
-            
+            deleteDoc(ref);
         }
         
         return(
             <View style={styles.todoContainer}>
                 <TouchableOpacity onPress={toggleDone} style={styles.todo}>
-                    {item.done && <Ionicons name='md-checkmark-circle' /> }
-                    {!item.done && <Entypo name='circle' size={24} color='black' /> }
+                    {item.done && <Ionicons name='md-checkmark-circle' size={32} color='green'/> }
+                    {!item.done && <Entypo name='circle' size={32} color='black' /> }
                     <Text style={styles.todoText}> {item.title} </Text>
                 </TouchableOpacity>
                 <Ionicons name="trash-bin-outline" size={24} color={'red'} onPress={deleteItem} />
@@ -79,11 +99,8 @@ const [todo, setTodo] = useState('');
                 )}
 
         </View>
-            
-            
-            
-            
             <Button onPress={() => navigation.navigate('Details')} title="Open Details " />
+            <Button onPress={async() => logEvent(analytics, 'test_event')} title="test event" />
         </View>
     );
 }

@@ -1,6 +1,6 @@
 import {View,Text, Button, StyleSheet, TouchableOpacity} from 'react-native'
 import React, { useEffect, useState } from 'react'
-import { addDoc, collection, deleteDoc, doc, onSnapshot, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, deleteDoc, doc, getFirestore, onSnapshot, updateDoc } from 'firebase/firestore';
 import { FIREBASE_DB } from '../../firebaseCofig';
 import { TextInput } from 'react-native';
 import { FlatList } from 'react-native';
@@ -8,6 +8,7 @@ import Ionicons from '@expo/vector-icons/Ionicons';
 import {Entypo} from '@expo/vector-icons';
 import { initializeApp } from "firebase/app";
 import { getAnalytics, logEvent } from "firebase/analytics";
+import { useTrackScreenView } from '../../App.tsx';
 
 // Your web app's Firebase configuration
 // For Firebase JS SDK v7.20.0 and later, measurementId is optional
@@ -34,6 +35,8 @@ export interface Todo {
 const List = ({ navigation }: any) => {
 const [todos, setTodos] = useState<Todo[]>([]);
 const [todo, setTodo] = useState('');
+
+
 
     useEffect(()=>  {
         const todoRef = collection(FIREBASE_DB, 'todos');
@@ -86,7 +89,17 @@ const [todo, setTodo] = useState('');
             <View style={styles.container}>
                 <View style={styles.form}>
                     <TextInput style={styles.input} placeholder='Add new todo' onChangeText={(text: string) => setTodo(text)} value={todo} />
-                    <Button onPress={addToDo} title='Add Todo' disabled={todo===''} />
+                    
+                    <Button 
+                        onPress={() => {
+                         addToDo();  // Added parentheses to actually call the function
+                        logEvent(analytics, 'to_do_event_2');
+                        }} 
+                        title='Add Todo' 
+                        disabled={todo === ''}
+/>
+
+
                 </View>
                 { todos.length> 0 &&(
                     <View>
@@ -99,8 +112,12 @@ const [todo, setTodo] = useState('');
                 )}
 
         </View>
-            <Button onPress={() => navigation.navigate('Details')} title="Open Details " />
-            <Button onPress={async() => logEvent(analytics, 'test_event')} title="test event" />
+            <Button onPress={() => {logEvent(analytics, 'navigate_details_event'); // Logging the event
+            navigation.navigate('Details');
+        }} 
+        title="Open Details" 
+    />
+            <Button onPress={() => logEvent(analytics, 'test_event')} title="test event" />
         </View>
     );
 }
